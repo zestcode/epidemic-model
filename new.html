@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src = "https://d3js.org/d3.v4.min.js"></script>
+    <script src = "./menuEvent.js"></script>
+</head>
+<body>
+    <STYLE type=text/css>
+        .menu { BORDER-RIGHT: hsl(195, 100%, 25%) 2px solid; BORDER-TOP: #80e0ff 2px solid; LEFT: 0px; VISIBILITY: hidden; BORDER-LEFT: #80e0ff 2px solid; BORDER-BOTTOM: #006080 2px solid; POSITION: absolute; TOP: 0px; BACKGROUND-COLOR: #40a0c0 }
+        A.menuItem { BORDER-RIGHT: #000000 0px solid; PADDING-RIGHT: 12px; BORDER-TOP: #000000 0px solid; DISPLAY: block; PADDING-LEFT: 8px; FONT-WEIGHT: bold; FONT-SIZE: 8pt; PADDING-BOTTOM: 2px; BORDER-LEFT: #000000 0px solid; CURSOR: default; COLOR: #ffffff; PADDING-TOP: 2px; BORDER-BOTTOM: #000000 0px solid; FONT-FAMILY: MS Sans Serif, Arial, Tahoma, sans-serif; TEXT-DECORATION: none }
+        A.menuItem:hover { COLOR: #ffff00; BACKGROUND-COLOR: #004060 }
+    </STYLE>
+    <DIV class=menu id=myMenu><A class=menuItem
+          href="">感染</A> <A class=menuItem
+          href="">隔离</A> <A class=menuItem
+          href="">取消</A> </DIV>
+    <script>
+        var w = 960, h = 500;
+        var svg = d3.select("body").append("svg")
+            .attr("width", w)
+            .attr("height", h);
+        
+        var circle = svg.selectAll("circle")
+            .data(d3.range(50).map(function () {
+                var angle=Math.random()*Math.PI*2;
+                var speed=Math.random()*0.5+0.3;
+                return {
+                    x: w * Math.random(),
+                    y: h * Math.random(),
+                    dx: Math.cos(angle)*speed,
+                    dy: Math.sin(angle)*speed,
+                    color:"#00FF00"
+                };
+            }))
+            .enter().append("circle")
+            .attr("r", 10);
+        
+        var text = svg.append("text")
+            .attr("x", 20)
+            .attr("y", 20);
+        
+        var start = Date.now(),
+            frames = 0;
+        
+        d3.timer(function () {
+        
+            // Update the FPS meter.
+            var now = Date.now(), duration = now - start;
+            //text.text(~~(++frames * 1000 / duration));
+            if (duration >= 1000) frames = 0, start = now;
+        
+            // Update the circle positions.
+            circle
+                .attr("cx", function(d) { d.x += d.dx; if (d.x > w||d.x<0) d.dx=-d.dx; return d.x; })
+                .attr("cy", function(d) { d.y += d.dy; if (d.y > h || d.y < 0) d.dy=-d.dy; return d.y; })
+                .style("fill",function(d){
+                    var ax=0,ay=0;
+                    x=circle.each(function(e,i)
+                    {
+                        if(e!=d)
+                        {
+                            var distance=Math.hypot(e.x-d.x,e.y-d.y);
+                            //not everyone want to touch other easily so we choose to use a repulsion
+                            if(distance==0)
+                                distance=0.001;//to avoid the NaN
+                            if(distance<100)//social disconnection
+                            {
+                                ax+=(e.x-d.x)/distance*distance;
+                                ay+=(e.y-d.y)/distance*distance;
+                            }
+                            if(e.color=="#FF0000")
+                            {//touch the patient
+                                
+                                if(distance<50)
+                                {
+                                    var posb=5*1/(distance*distance+0.01)-0.01;
+                                    //the posibility of infection is inversely proportional to distance
+                                    if(Math.random()<posb)//the possibility of infection each frame
+                                            d.color="#FF0000";//marked as a patient
+                                    else
+                                        if(d.color=="#00FF00")
+                                            d.color="#FFFF00";//marked as a close contact
+                                }
+                            }
+                        }
+                    });
+                    d.dx+=ax*-0.00005;
+                    d.dy+=ay*-0.00005;
+                    if(Math.hypot(d.dx,d.dy)>0.6)
+                    {
+                        var v=Math.hypot(d.dx,d.dy);
+                        d.dx=0.6*d.dx/v;
+                        d.dy=0.6*d.dy/v;
+                    }
+                    return d.color;
+                })
+                .on("click",function(d){
+                d.color="#FF0000";
+                openMenu(event, 'myMenu');
+                return 0;});
+        }
+        
+        );</script>
+</body>
+</html>
