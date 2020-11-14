@@ -1,2 +1,3 @@
 # epidemic-model-for-hackthon
-a project of edgeplug which h
+一个可视化疫情传播项目，以edge插件的形式分发。
+
